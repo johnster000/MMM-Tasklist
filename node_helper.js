@@ -38,6 +38,19 @@ module.exports = NodeHelper.create({
 		if (notification === "TASKLIST_GET_STATE") {
 			this.sendState();
 		}
+
+		if (notification === "TASKLIST_COMPLETE_TASK") {
+			const taskId = payload && payload.taskId;
+			const data = this.readData();
+			const task = data.tasks.find(t => t.id === taskId);
+			if (task) {
+				const user = data.users.find(u => u.id === task.userId);
+				this.appendLog(`COMPLETED\t${user ? user.name : task.userId}\t${task.text}`);
+				data.tasks = data.tasks.filter(t => t.id !== taskId);
+				this.writeData(data);
+				this.sendState();
+			}
+		}
 	},
 
 	// ---- data helpers -------------------------------------------------

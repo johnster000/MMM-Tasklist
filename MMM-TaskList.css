@@ -20,4 +20,14 @@
 
 .mmm-tasklist-table .tasklist-task {
 	color: #ccc;
+	cursor: pointer;
+}
+
+.mmm-tasklist-table .tasklist-task:hover {
+	color: #fff;
+}
+
+.mmm-tasklist-row.completing {
+	opacity: 0.3;
+	transition: opacity 0.3s ease;
 }

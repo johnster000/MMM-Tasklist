@@ -59,7 +59,7 @@ Module.register("MMM-TaskList", {
 		}
 
 		const table = document.createElement("table");
-		table.className = "mmm-tasklist-table small";
+		table.className = "mmm-tasklist-table medium";
 
 		// Group tasks by user, in the order users were created.
 		this.users.forEach((user) => {
@@ -70,6 +70,7 @@ Module.register("MMM-TaskList", {
 
 			userTasks.forEach((task, index) => {
 				const row = document.createElement("tr");
+				row.className = "mmm-tasklist-row";
 
 				const nameCell = document.createElement("td");
 				nameCell.className = "tasklist-name";
@@ -81,6 +82,10 @@ Module.register("MMM-TaskList", {
 				const taskCell = document.createElement("td");
 				taskCell.className = "tasklist-task";
 				taskCell.innerHTML = task.text;
+				taskCell.addEventListener("click", () => {
+					row.classList.add("completing");
+					this.sendSocketNotification("TASKLIST_COMPLETE_TASK", { taskId: task.id });
+				});
 				row.appendChild(taskCell);
 
 				table.appendChild(row);

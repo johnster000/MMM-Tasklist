@@ -158,8 +158,9 @@ module.exports = NodeHelper.create({
 			if (!userExists) {
 				return res.status(404).json({ error: "no such user" });
 			}
+			const dueDate = (req.body && req.body.dueDate) || null;
 			const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-			data.tasks.push({ id, userId, text, done: false, createdAt: new Date().toISOString() });
+			data.tasks.push({ id, userId, text, dueDate, done: false, createdAt: new Date().toISOString() });
 			this.writeData(data);
 			this.sendState();
 			res.json({ ok: true });
@@ -189,6 +190,7 @@ module.exports = NodeHelper.create({
 			const task = data.tasks.find(t => t.id === req.params.id);
 			if (!task) return res.status(404).json({ error: "no such task" });
 			task.text = text;
+			if ("dueDate" in (req.body || {})) task.dueDate = req.body.dueDate || null;
 			this.writeData(data);
 			this.sendState();
 			res.json({ ok: true });

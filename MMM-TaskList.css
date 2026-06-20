@@ -43,6 +43,13 @@
 	color: #fff;
 }
 
+/* ---- Urgency indicators (bullet + text tint, kept subtle) ---- */
+.mmm-tasklist-item.overdue::before  { color: #8b4040; }
+.mmm-tasklist-item.overdue .tasklist-task  { color: #c47a7a; }
+
+.mmm-tasklist-item.due-today::before { color: #8b7020; }
+.mmm-tasklist-item.due-today .tasklist-task { color: #c4a040; }
+
 /* ---- Strikethrough state ---- */
 .mmm-tasklist-item.completing::before {
 	color: #444;

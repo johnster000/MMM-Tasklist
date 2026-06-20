@@ -163,7 +163,7 @@ body {
 .task-text { flex: 1; font-size: 0.95rem; min-width: 0; }
 .task-actions { display: flex; gap: 6px; flex-shrink: 0; }
 
-.add-task-form { display: flex; gap: 8px; border-top: 1px solid var(--border); padding-top: 10px; }
+.add-task-form { display: flex; gap: 8px; flex-wrap: wrap; border-top: 1px solid var(--border); padding-top: 10px; }
 .add-task-input {
   flex: 1;
   height: 40px;
@@ -272,6 +272,25 @@ body {
 }
 .history-person { font-size: 0.9rem; font-weight: 600; }
 .history-task   { font-size: 0.875rem; color: var(--text-2); margin-top: 1px; }
+
+.add-task-date {
+  height: 40px;
+  padding: 0 8px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-sm);
+  font-size: 0.85rem;
+  background: var(--surface-2);
+  color: var(--text);
+  outline: none;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.add-task-date:focus { border-color: var(--accent); background: var(--surface); }
+
+.task-due { font-size: 0.72rem; margin-top: 2px; font-weight: 500; }
+.task-due.overdue  { color: var(--danger); }
+.task-due.today    { color: #d97706; }
+.task-due.upcoming { color: var(--text-2); }
 </style>
 </head>
 <body>
@@ -323,6 +342,17 @@ function escapeAttr(str) {
   return (str || "").replace(/&/g, "&amp;").replace(/"/g, "&quot;");
 }
 
+function dueDateDisplay(dateStr) {
+  if (!dateStr) return null;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const due = new Date(dateStr + "T00:00:00");
+  const diff = Math.round((due - today) / 86400000);
+  if (diff < 0)  return { label: Math.abs(diff) + " day" + (Math.abs(diff) !== 1 ? "s" : "") + " overdue", cls: "overdue" };
+  if (diff === 0) return { label: "Due today", cls: "today" };
+  if (diff === 1) return { label: "Due tomorrow", cls: "upcoming" };
+  return { label: "Due " + due.toLocaleDateString([], { month: "short", day: "numeric" }), cls: "upcoming" };
+}
+
 // ── Tab switching ────────────────────────────────────────────────────
 function showTab(name) {
   document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b.dataset.tab === name));
@@ -354,15 +384,21 @@ function renderTasks(state) {
     const userTasks = state.tasks.filter(t => t.userId === user.id);
 
     const tasksHtml = userTasks.length
-      ? userTasks.map(t => `
+      ? userTasks.map(t => {
+          const due = dueDateDisplay(t.dueDate);
+          return `
           <li class="task-item">
-            <span class="task-text">${escapeHtml(t.text)}</span>
+            <div style="flex:1; min-width:0">
+              <div class="task-text">${escapeHtml(t.text)}</div>
+              ${due ? `<div class="task-due ${due.cls}">${due.label}</div>` : ""}
+            </div>
             <span class="task-actions">
-              <button class="btn btn-ghost   btn-icon" data-action="edit-task"     data-id="${t.id}" data-text="${escapeAttr(t.text)}" title="Edit">✎</button>
+              <button class="btn btn-ghost   btn-icon" data-action="edit-task"     data-id="${t.id}" data-text="${escapeAttr(t.text)}" data-due="${escapeAttr(t.dueDate || "")}" title="Edit">✎</button>
               <button class="btn btn-success btn-icon" data-action="complete-task" data-id="${t.id}" title="Mark done">✓</button>
               <button class="btn btn-danger  btn-icon" data-action="delete-task"   data-id="${t.id}" title="Delete">✕</button>
             </span>
-          </li>`).join("")
+          </li>`;
+        }).join("")
       : '<li class="task-item"><span class="task-text" style="color:var(--text-2)">No tasks assigned</span></li>';
 
     const card = document.createElement("div");
@@ -375,6 +411,7 @@ function renderTasks(state) {
       <ul class="task-list">${tasksHtml}</ul>
       <form class="add-task-form" data-action="add-task" data-user-id="${user.id}">
         <input class="add-task-input" type="text" placeholder="Add a task…" required autocomplete="off">
+        <input class="add-task-date" type="date" title="Due date (optional)">
         <button class="btn-add-task" type="submit">Add</button>
       </form>
     `;
@@ -406,12 +443,13 @@ document.getElementById("users-container").addEventListener("click", async e => 
   } else if (action === "edit-task") {
     const item = btn.closest(".task-item");
     item.innerHTML = `
-      <form class="add-task-form" style="flex:1" data-action="save-task-edit" data-id="${id}">
+      <form class="add-task-form" style="flex:1; border-top:none; padding-top:0" data-action="save-task-edit" data-id="${id}">
         <input class="add-task-input" type="text" value="${escapeAttr(btn.dataset.text)}" required autocomplete="off">
+        <input class="add-task-date" type="date" value="${escapeAttr(btn.dataset.due)}" title="Due date (optional)">
         <button class="btn-add-task" type="submit">Save</button>
         <button class="btn btn-danger btn-icon" type="button" data-action="cancel-edit">✕</button>
       </form>`;
-    item.querySelector("input").focus();
+    item.querySelector("input[type=text]").focus();
     return;
   } else if (action === "cancel-edit") {
     loadState();
@@ -427,11 +465,14 @@ document.getElementById("users-container").addEventListener("submit", async e =>
   const input = form.querySelector("input");
   const text = input.value.trim();
   if (!text) return;
+  const dateInput = form.querySelector("input[type=date]");
+  const dueDate = dateInput ? (dateInput.value || null) : undefined;
   if (form.dataset.action === "add-task") {
-    await api("/api/tasks", { method: "POST", body: JSON.stringify({ userId: form.dataset.userId, text }) });
+    await api("/api/tasks", { method: "POST", body: JSON.stringify({ userId: form.dataset.userId, text, dueDate }) });
     input.value = "";
+    if (dateInput) dateInput.value = "";
   } else if (form.dataset.action === "save-task-edit") {
-    await api(`/api/tasks/${form.dataset.id}`, { method: "PUT", body: JSON.stringify({ text }) });
+    await api(`/api/tasks/${form.dataset.id}`, { method: "PUT", body: JSON.stringify({ text, dueDate }) });
   }
   loadState();
 });

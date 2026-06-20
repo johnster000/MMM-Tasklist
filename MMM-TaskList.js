@@ -86,7 +86,15 @@ Module.register("MMM-TaskList", {
 		});
 
 		// ---- Task list for the active tab ---- (rendered above the tab bar)
-		const activeTasks = this.tasks.filter(t => t.userId === this.activeUserId);
+		// Sort: overdue first, then by due date ascending, undated last
+		const activeTasks = this.tasks
+			.filter(t => t.userId === this.activeUserId)
+			.sort((a, b) => {
+				if (!a.dueDate && !b.dueDate) return 0;
+				if (!a.dueDate) return 1;
+				if (!b.dueDate) return -1;
+				return new Date(a.dueDate) - new Date(b.dueDate);
+			});
 
 		const taskList = document.createElement("ul");
 		taskList.className = "mmm-tasklist-items";
@@ -96,6 +104,14 @@ Module.register("MMM-TaskList", {
 			item.className = "mmm-tasklist-item";
 			if (this.pendingCompletions[task.id]) {
 				item.classList.add("completing");
+			}
+			if (task.dueDate) {
+				const today = new Date();
+				today.setHours(0, 0, 0, 0);
+				const due = new Date(task.dueDate + "T00:00:00");
+				const diff = Math.round((due - today) / 86400000);
+				if (diff < 0) item.classList.add("overdue");
+				else if (diff === 0) item.classList.add("due-today");
 			}
 
 			const taskEl = document.createElement("span");

@@ -388,7 +388,7 @@ document.getElementById("add-user-form").addEventListener("submit", async e => {
 });
 
 document.getElementById("users-container").addEventListener("click", async e => {
-  const btn = e.target.closest("[data-action]");
+  const btn = e.target.closest("button[data-action]");
   if (!btn) return;
   const { action, id } = btn.dataset;
   if (action === "delete-user") {

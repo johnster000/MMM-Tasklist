@@ -381,7 +381,14 @@ function renderTasks(state) {
   }
 
   state.users.forEach(user => {
-    const userTasks = state.tasks.filter(t => t.userId === user.id);
+    const userTasks = state.tasks
+      .filter(t => t.userId === user.id)
+      .sort((a, b) => {
+        if (!a.dueDate && !b.dueDate) return 0;
+        if (!a.dueDate) return 1;
+        if (!b.dueDate) return -1;
+        return new Date(a.dueDate) - new Date(b.dueDate);
+      });
 
     const tasksHtml = userTasks.length
       ? userTasks.map(t => {

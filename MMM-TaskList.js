@@ -57,44 +57,41 @@ Module.register("MMM-TaskList", {
 			return wrapper;
 		}
 
-		const table = document.createElement("table");
-		table.className = "mmm-tasklist-table medium";
+		const list = document.createElement("div");
+		list.className = "mmm-tasklist-list";
 
-		// Group tasks by user, in the order users were created.
 		this.users.forEach((user) => {
 			const userTasks = this.tasks.filter(t => t.userId === user.id);
 			if (userTasks.length === 0) {
-				return; // don't show a row for a user with no open tasks
+				return;
 			}
 
 			userTasks.forEach((task) => {
-				const row = document.createElement("tr");
+				const row = document.createElement("div");
 				row.className = "mmm-tasklist-row";
 				if (this.pendingCompletions[task.id]) {
 					row.classList.add("completing");
 				}
 
-				const nameCell = document.createElement("td");
-				nameCell.className = "tasklist-name";
-				nameCell.innerHTML = user.name;
-				row.appendChild(nameCell);
+				const nameEl = document.createElement("span");
+				nameEl.className = "tasklist-name";
+				nameEl.textContent = user.name;
+				row.appendChild(nameEl);
 
-				const dashCell = document.createElement("td");
-				dashCell.className = "tasklist-dash";
-				dashCell.textContent = "—";
-				row.appendChild(dashCell);
+				const dashEl = document.createElement("span");
+				dashEl.className = "tasklist-dash";
+				dashEl.textContent = "—";
+				row.appendChild(dashEl);
 
-				const taskCell = document.createElement("td");
-				taskCell.className = "tasklist-task";
-				taskCell.innerHTML = task.text;
-				taskCell.addEventListener("click", () => {
+				const taskEl = document.createElement("span");
+				taskEl.className = "tasklist-task";
+				taskEl.textContent = task.text;
+				taskEl.addEventListener("click", () => {
 					if (this.pendingCompletions[task.id]) {
-						// Undo: cancel the pending completion
 						clearTimeout(this.pendingCompletions[task.id]);
 						delete this.pendingCompletions[task.id];
 						row.classList.remove("completing");
 					} else {
-						// Queue completion: show strikethrough, remove after 60s
 						row.classList.add("completing");
 						this.pendingCompletions[task.id] = setTimeout(() => {
 							delete this.pendingCompletions[task.id];
@@ -102,13 +99,13 @@ Module.register("MMM-TaskList", {
 						}, 60000);
 					}
 				});
-				row.appendChild(taskCell);
+				row.appendChild(taskEl);
 
-				table.appendChild(row);
+				list.appendChild(row);
 			});
 		});
 
-		wrapper.appendChild(table);
+		wrapper.appendChild(list);
 		return wrapper;
 	}
 });

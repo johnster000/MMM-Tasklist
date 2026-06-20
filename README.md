@@ -1,20 +1,17 @@
 # MMM-TaskList
 
-A [MagicMirror²](https://magicmirror.builders/) module that displays household members and their assigned tasks on the mirror. Tasks disappear from the display once marked complete, and completions are logged to a history file.
+A [MagicMirror²](https://magicmirror.builders/) module that displays household members and their assigned tasks on the mirror. Members are shown as tabs — tap a tab to view that person's tasks. Tap a task to mark it complete; it stays crossed out for 60 seconds (giving you time to undo) before it is removed from the display and logged.
 
-A separate admin web portal (its own port, independent of the mirror's own server) lets you add household members and assign/complete tasks from any browser on your network.
+A separate admin web portal (its own port, independent of the mirror's own server) lets you manage members and tasks from any phone or laptop on your network, and includes a history view with per-person completion stats.
 
 ## Features
 
-- Displays a simple table: member name + their open tasks
-- Completed tasks vanish from the mirror display immediately
+- Per-member tab bar — only members with open tasks appear
+- Tap a task on the mirror to mark it complete; tap again within 60 seconds to undo
 - Every completion is timestamped and appended to `data/completed.log`
-- Admin portal runs on its own dedicated port — manage everything from a phone or laptop
+- Admin portal with a Tasks tab and a History tab (all-time stats, per-person bar chart, grouped activity log)
+- Admin portal is mobile-friendly — works well from a phone
 - Data persists in a plain JSON file (`data/tasks.json`) — no database required
-
-## Screenshots
-
-_(add a screenshot of your mirror display and the admin portal here)_
 
 ## Installation
 
@@ -32,48 +29,50 @@ Add to `~/MagicMirror/config/config.js`:
 ```js
 {
   module: "MMM-TaskList",
-  position: "top_right",
+  position: "bottom_right",
   config: {
-    adminPort: 8081
+    adminPort: 8081,
+    maxWidth: "350px"
   }
 }
 ```
 
-| Option            | Type   | Default                  | Description                                      |
-|--------------------|--------|---------------------------|--------------------------------------------------|
-| `adminPort`         | number | `8081`                    | Port the admin web portal listens on             |
-| `updateFadeSpeed`   | number | `500`                     | Fade transition speed (ms) when the table redraws |
-| `emptyMessage`      | string | `"All chores done! ✨"`   | Message shown when there are no open tasks       |
+| Option            | Type   | Default               | Description                                                         |
+|--------------------|--------|-----------------------|---------------------------------------------------------------------|
+| `adminPort`        | number | `8081`                | Port the admin web portal listens on                                |
+| `maxWidth`         | string | `"400px"`             | Width of the module — set this to prevent overflow into adjacent modules |
+| `updateFadeSpeed`  | number | `500`                 | Fade transition speed (ms) when the display redraws                 |
+| `emptyMessage`     | string | `"All tasks done! ✨"` | Message shown on the mirror when there are no open tasks            |
 
 ## Using the admin portal
 
-Once the mirror is running, visit:
+Once the mirror is running, open a browser on any device on your network and visit:
 
 ```
 http://<mirror-ip-or-hostname>:8081
 ```
 
 From there you can:
-- Add household members
+- Add or remove household members
 - Assign tasks to a member
-- Mark tasks complete (removes them from the mirror display, logs to history)
-- Delete a task or member entirely
+- Mark tasks complete (logged to history) or delete them without logging
+- View the History tab for completion stats and a full activity log
 
-**Note:** the admin portal currently has no authentication. It's intended for use on a trusted home network. If you need a password gate, that can be added with simple HTTP basic auth in `node_helper.js`.
+**Note:** the admin portal has no authentication and is intended for use on a trusted home network.
 
 ## Data files
 
-Created automatically on first run, inside `MMM-TaskList/data/`:
+Created automatically on first run inside `MMM-TaskList/data/`:
 
-- `tasks.json` — current users and open tasks (not committed to git — see `.gitignore`)
-- `completed.log` — tab-separated history of completed tasks: `timestamp  member  task`
+- `tasks.json` — current members and their open tasks (excluded from git)
+- `completed.log` — tab-separated completion history: `timestamp  COMPLETED  member  task`
 
 ## Architecture
 
-- `MMM-TaskList.js` — front-end module, renders the table, no business logic
-- `node_helper.js` — backend: reads/writes `tasks.json`, runs the admin Express server on its own port, pushes state to the front end via socket notifications
-- `admin/public/index.html` — static admin UI served by the admin Express server
+- `MMM-TaskList.js` — front-end module; renders the tab bar and task list, handles touch-to-complete logic
+- `node_helper.js` — backend; reads/writes `tasks.json`, appends to `completed.log`, runs the admin Express server on its own port, pushes state to the front end via socket notifications
+- `admin/public/index.html` — self-contained admin UI served by the Express server
 
 ## License
 
-MIT (or update to your preference)
+MIT

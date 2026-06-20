@@ -11,7 +11,8 @@ Module.register("MMM-TaskList", {
 	defaults: {
 		adminPort: 8081,
 		updateFadeSpeed: 500,
-		emptyMessage: "All tasks done! ✨"
+		emptyMessage: "All tasks done! ✨",
+		maxWidth: "400px"  // set in config.js to match your region width
 	},
 
 	// ---- lifecycle -------------------------------------------------
@@ -44,6 +45,7 @@ Module.register("MMM-TaskList", {
 	getDom: function () {
 		const wrapper = document.createElement("div");
 		wrapper.className = "mmm-tasklist-wrapper";
+		wrapper.style.width = this.config.maxWidth;
 
 		if (!this.loaded) {
 			wrapper.innerHTML = "Loading tasks...";
@@ -83,9 +85,7 @@ Module.register("MMM-TaskList", {
 			tabBar.appendChild(tab);
 		});
 
-		wrapper.appendChild(tabBar);
-
-		// ---- Task list for the active tab ----
+		// ---- Task list for the active tab ---- (rendered above the tab bar)
 		const activeTasks = this.tasks.filter(t => t.userId === this.activeUserId);
 
 		const taskList = document.createElement("ul");
@@ -120,6 +120,7 @@ Module.register("MMM-TaskList", {
 		});
 
 		wrapper.appendChild(taskList);
+		wrapper.appendChild(tabBar);
 		return wrapper;
 	}
 });

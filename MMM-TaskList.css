@@ -1,30 +1,75 @@
-/* The wrapper must constrain itself to the MagicMirror region width.
-   overflow:hidden ensures nothing bleeds into adjacent modules. */
+/* width is set inline from config.maxWidth so the browser knows the hard
+   boundary before it calculates text layout — overflow:hidden clips anything
+   that somehow still escapes (e.g. a word with no break opportunity). */
 .mmm-tasklist-wrapper {
-	max-width: 100%;
 	overflow: hidden;
 	font-size: 0.92em;
 	box-sizing: border-box;
 }
 
-/* ---- Tab bar ---- */
+/* ---- Task list (top) ---- */
+.mmm-tasklist-items {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+
+.mmm-tasklist-item {
+	display: flex;
+	align-items: baseline;
+	padding: 4px 0;
+	min-width: 0;
+}
+
+.mmm-tasklist-item::before {
+	content: "•";
+	color: #555;
+	flex-shrink: 0;
+	padding-right: 8px;
+}
+
+.tasklist-task {
+	color: #ccc;
+	cursor: pointer;
+	flex: 1;
+	min-width: 0;
+	overflow-wrap: break-word;
+	word-break: break-word;
+	white-space: normal;
+}
+
+.tasklist-task:hover {
+	color: #fff;
+}
+
+/* ---- Strikethrough state ---- */
+.mmm-tasklist-item.completing::before {
+	color: #444;
+}
+
+.mmm-tasklist-item.completing .tasklist-task {
+	text-decoration: line-through;
+	color: #555;
+	transition: color 0.3s ease;
+}
+
+/* ---- Tab bar (bottom) ---- */
 .mmm-tasklist-tabs {
 	display: flex;
 	flex-wrap: wrap;
-	margin-bottom: 10px;
-	padding-bottom: 1px;
-	border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-	max-width: 100%;
-	overflow: hidden;
+	margin-top: 10px;
+	padding-top: 1px;
+	border-top: 1px solid rgba(255, 255, 255, 0.12);
 }
 
+/* Active indicator sits on top of each tab, pointing up at the task list */
 .mmm-tasklist-tab {
 	background: none;
 	border: none;
-	border-bottom: 2px solid transparent;
-	margin-bottom: -1px;
+	border-top: 2px solid transparent;
+	margin-top: -1px;
 	color: rgba(255, 255, 255, 0.35);
-	padding: 4px 10px 6px;
+	padding: 6px 10px 4px;
 	cursor: pointer;
 	font-size: inherit;
 	font-family: inherit;
@@ -42,53 +87,5 @@
 
 .mmm-tasklist-tab.active {
 	color: #fff;
-	border-bottom-color: #fff;
-}
-
-/* ---- Task list ---- */
-.mmm-tasklist-items {
-	list-style: none;
-	padding: 0;
-	margin: 0;
-	max-width: 100%;
-}
-
-.mmm-tasklist-item {
-	display: flex;
-	align-items: baseline;
-	padding: 4px 0;
-	min-width: 0;
-	max-width: 100%;
-}
-
-.mmm-tasklist-item::before {
-	content: "•";
-	color: #555;
-	flex-shrink: 0;
-	padding-right: 8px;
-}
-
-.tasklist-task {
-	color: #ccc;
-	cursor: pointer;
-	flex: 1;
-	min-width: 0;         /* required — without this, flex children ignore overflow */
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}
-
-.tasklist-task:hover {
-	color: #fff;
-}
-
-/* ---- Strikethrough state ---- */
-.mmm-tasklist-item.completing::before {
-	color: #444;
-}
-
-.mmm-tasklist-item.completing .tasklist-task {
-	text-decoration: line-through;
-	color: #555;
-	transition: color 0.3s ease;
+	border-top-color: #fff;
 }

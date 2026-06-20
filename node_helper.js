@@ -181,6 +181,19 @@ module.exports = NodeHelper.create({
 			res.json({ ok: true });
 		});
 
+		// Edit a task's text
+		app.put("/api/tasks/:id", (req, res) => {
+			const text = (req.body && req.body.text || "").trim();
+			if (!text) return res.status(400).json({ error: "text is required" });
+			const data = this.readData();
+			const task = data.tasks.find(t => t.id === req.params.id);
+			if (!task) return res.status(404).json({ error: "no such task" });
+			task.text = text;
+			this.writeData(data);
+			this.sendState();
+			res.json({ ok: true });
+		});
+
 		// Get completion history (parses completed.log)
 		app.get("/api/history", (req, res) => {
 			let entries = [];
@@ -196,6 +209,22 @@ module.exports = NodeHelper.create({
 				console.error("[MMM-TaskList] Failed to read history:", err);
 			}
 			res.json({ entries });
+		});
+
+		// Delete a history entry by its timestamp
+		app.delete("/api/history/:timestamp", (req, res) => {
+			const ts = req.params.timestamp;
+			try {
+				if (fs.existsSync(this.logFile)) {
+					const raw = fs.readFileSync(this.logFile, "utf8");
+					const kept = raw.split("\n").filter(line => line.split("\t")[0] !== ts);
+					fs.writeFileSync(this.logFile, kept.join("\n"));
+				}
+			} catch (err) {
+				console.error("[MMM-TaskList] Failed to delete history entry:", err);
+				return res.status(500).json({ error: "failed to delete entry" });
+			}
+			res.json({ ok: true });
 		});
 
 		// Delete a task without logging it as completed (e.g. mistaken entry)

@@ -319,6 +319,10 @@ function escapeHtml(str) {
   return d.innerHTML;
 }
 
+function escapeAttr(str) {
+  return (str || "").replace(/&/g, "&amp;").replace(/"/g, "&quot;");
+}
+
 // ── Tab switching ────────────────────────────────────────────────────
 function showTab(name) {
   document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b.dataset.tab === name));
@@ -354,6 +358,7 @@ function renderTasks(state) {
           <li class="task-item">
             <span class="task-text">${escapeHtml(t.text)}</span>
             <span class="task-actions">
+              <button class="btn btn-ghost   btn-icon" data-action="edit-task"     data-id="${t.id}" data-text="${escapeAttr(t.text)}" title="Edit">✎</button>
               <button class="btn btn-success btn-icon" data-action="complete-task" data-id="${t.id}" title="Mark done">✓</button>
               <button class="btn btn-danger  btn-icon" data-action="delete-task"   data-id="${t.id}" title="Delete">✕</button>
             </span>
@@ -398,19 +403,36 @@ document.getElementById("users-container").addEventListener("click", async e => 
     await api(`/api/tasks/${id}/complete`, { method: "POST" });
   } else if (action === "delete-task") {
     await api(`/api/tasks/${id}`, { method: "DELETE" });
+  } else if (action === "edit-task") {
+    const item = btn.closest(".task-item");
+    item.innerHTML = `
+      <form class="add-task-form" style="flex:1" data-action="save-task-edit" data-id="${id}">
+        <input class="add-task-input" type="text" value="${escapeAttr(btn.dataset.text)}" required autocomplete="off">
+        <button class="btn-add-task" type="submit">Save</button>
+        <button class="btn btn-danger btn-icon" type="button" data-action="cancel-edit">✕</button>
+      </form>`;
+    item.querySelector("input").focus();
+    return;
+  } else if (action === "cancel-edit") {
+    loadState();
+    return;
   }
   loadState();
 });
 
 document.getElementById("users-container").addEventListener("submit", async e => {
-  const form = e.target.closest("form[data-action=add-task]");
+  const form = e.target.closest("form[data-action]");
   if (!form) return;
   e.preventDefault();
   const input = form.querySelector("input");
   const text = input.value.trim();
   if (!text) return;
-  await api("/api/tasks", { method: "POST", body: JSON.stringify({ userId: form.dataset.userId, text }) });
-  input.value = "";
+  if (form.dataset.action === "add-task") {
+    await api("/api/tasks", { method: "POST", body: JSON.stringify({ userId: form.dataset.userId, text }) });
+    input.value = "";
+  } else if (form.dataset.action === "save-task-edit") {
+    await api(`/api/tasks/${form.dataset.id}`, { method: "PUT", body: JSON.stringify({ text }) });
+  }
   loadState();
 });
 
@@ -496,10 +518,11 @@ function renderHistory(entries) {
       ${items.map(e => `
         <div class="history-item">
           <span class="history-time">${formatTime(e.timestamp)}</span>
-          <div>
+          <div style="flex:1">
             <div class="history-person">${escapeHtml(e.name)}</div>
             <div class="history-task">${escapeHtml(e.task)}</div>
           </div>
+          <button class="btn btn-danger btn-icon" data-action="delete-history" data-ts="${escapeAttr(e.timestamp)}" title="Delete entry">✕</button>
         </div>
       `).join("")}
     </div>
@@ -511,6 +534,14 @@ function renderHistory(entries) {
     '<p class="section-label">Recent Activity</p>' +
     activityHtml;
 }
+
+document.getElementById("history-container").addEventListener("click", async e => {
+  const btn = e.target.closest("button[data-action=delete-history]");
+  if (!btn) return;
+  if (!confirm("Remove this entry from the history log?")) return;
+  await api(`/api/history/${encodeURIComponent(btn.dataset.ts)}`, { method: "DELETE" });
+  loadHistory();
+});
 
 // ── Init ─────────────────────────────────────────────────────────────
 loadState();

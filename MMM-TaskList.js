@@ -1,8 +1,7 @@
 /* MMM-TaskList / MMM-TaskList.js
  *
- * Front-end display module. Renders a table of household members
- * and their assigned tasks. Pulls all data/state from node_helper —
- * no business logic here, just rendering.
+ * Front-end display module. Renders a per-member tab bar; the active
+ * tab shows that member's open tasks. Pulls all state from node_helper.
  */
 
 Module.register("MMM-TaskList", {
@@ -10,9 +9,9 @@ Module.register("MMM-TaskList", {
 	// ---- defaults -------------------------------------------------
 
 	defaults: {
-		adminPort: 8081,      // port the admin server listens on (passed to node_helper)
-		updateFadeSpeed: 500, // ms for DOM fade transition on redraw
-		emptyMessage: "All tasks done! \u2728"
+		adminPort: 8081,
+		updateFadeSpeed: 500,
+		emptyMessage: "All tasks done! ✨"
 	},
 
 	// ---- lifecycle -------------------------------------------------
@@ -21,6 +20,7 @@ Module.register("MMM-TaskList", {
 		this.users = [];
 		this.tasks = [];
 		this.loaded = false;
+		this.activeUserId = null;
 		this.pendingCompletions = {}; // taskId -> timeoutId
 
 		this.sendSocketNotification("TASKLIST_INIT", this.config);
@@ -51,61 +51,75 @@ Module.register("MMM-TaskList", {
 			return wrapper;
 		}
 
-		if (this.tasks.length === 0) {
+		// Only show users who have at least one open task
+		const activeUsers = this.users.filter(u =>
+			this.tasks.some(t => t.userId === u.id)
+		);
+
+		if (activeUsers.length === 0) {
 			wrapper.innerHTML = this.config.emptyMessage;
 			wrapper.className += " dimmed light medium";
 			return wrapper;
 		}
 
-		const list = document.createElement("div");
-		list.className = "mmm-tasklist-list";
+		// If the active tab no longer has tasks, fall back to the first user
+		if (!activeUsers.some(u => u.id === this.activeUserId)) {
+			this.activeUserId = activeUsers[0].id;
+		}
 
-		this.users.forEach((user) => {
-			const userTasks = this.tasks.filter(t => t.userId === user.id);
-			if (userTasks.length === 0) {
-				return;
-			}
+		// ---- Tab bar ----
+		const tabBar = document.createElement("div");
+		tabBar.className = "mmm-tasklist-tabs";
 
-			userTasks.forEach((task) => {
-				const row = document.createElement("div");
-				row.className = "mmm-tasklist-row";
-				if (this.pendingCompletions[task.id]) {
-					row.classList.add("completing");
-				}
-
-				const nameEl = document.createElement("span");
-				nameEl.className = "tasklist-name";
-				nameEl.textContent = user.name;
-				row.appendChild(nameEl);
-
-				const dashEl = document.createElement("span");
-				dashEl.className = "tasklist-dash";
-				dashEl.textContent = "—";
-				row.appendChild(dashEl);
-
-				const taskEl = document.createElement("span");
-				taskEl.className = "tasklist-task";
-				taskEl.textContent = task.text;
-				taskEl.addEventListener("click", () => {
-					if (this.pendingCompletions[task.id]) {
-						clearTimeout(this.pendingCompletions[task.id]);
-						delete this.pendingCompletions[task.id];
-						row.classList.remove("completing");
-					} else {
-						row.classList.add("completing");
-						this.pendingCompletions[task.id] = setTimeout(() => {
-							delete this.pendingCompletions[task.id];
-							this.sendSocketNotification("TASKLIST_COMPLETE_TASK", { taskId: task.id });
-						}, 60000);
-					}
-				});
-				row.appendChild(taskEl);
-
-				list.appendChild(row);
+		activeUsers.forEach((user) => {
+			const tab = document.createElement("button");
+			tab.className = "mmm-tasklist-tab";
+			if (user.id === this.activeUserId) tab.classList.add("active");
+			tab.textContent = user.name;
+			tab.addEventListener("click", () => {
+				this.activeUserId = user.id;
+				this.updateDom(0);
 			});
+			tabBar.appendChild(tab);
 		});
 
-		wrapper.appendChild(list);
+		wrapper.appendChild(tabBar);
+
+		// ---- Task list for the active tab ----
+		const activeTasks = this.tasks.filter(t => t.userId === this.activeUserId);
+
+		const taskList = document.createElement("ul");
+		taskList.className = "mmm-tasklist-items";
+
+		activeTasks.forEach((task) => {
+			const item = document.createElement("li");
+			item.className = "mmm-tasklist-item";
+			if (this.pendingCompletions[task.id]) {
+				item.classList.add("completing");
+			}
+
+			const taskEl = document.createElement("span");
+			taskEl.className = "tasklist-task";
+			taskEl.textContent = task.text;
+			taskEl.addEventListener("click", () => {
+				if (this.pendingCompletions[task.id]) {
+					clearTimeout(this.pendingCompletions[task.id]);
+					delete this.pendingCompletions[task.id];
+					item.classList.remove("completing");
+				} else {
+					item.classList.add("completing");
+					this.pendingCompletions[task.id] = setTimeout(() => {
+						delete this.pendingCompletions[task.id];
+						this.sendSocketNotification("TASKLIST_COMPLETE_TASK", { taskId: task.id });
+					}, 60000);
+				}
+			});
+
+			item.appendChild(taskEl);
+			taskList.appendChild(item);
+		});
+
+		wrapper.appendChild(taskList);
 		return wrapper;
 	}
 });

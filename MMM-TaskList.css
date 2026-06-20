@@ -1,31 +1,69 @@
+/* The wrapper must constrain itself to the MagicMirror region width.
+   overflow:hidden ensures nothing bleeds into adjacent modules. */
 .mmm-tasklist-wrapper {
-	text-align: left;
 	max-width: 100%;
-	font-size: 0.92em; /* sits between MagicMirror's .small (~0.85em) and .medium (~1em) */
+	overflow: hidden;
+	font-size: 0.92em;
+	box-sizing: border-box;
 }
 
-.mmm-tasklist-list {
+/* ---- Tab bar ---- */
+.mmm-tasklist-tabs {
 	display: flex;
-	flex-direction: column;
-	gap: 5px;
+	flex-wrap: wrap;
+	margin-bottom: 10px;
+	padding-bottom: 1px;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+	max-width: 100%;
+	overflow: hidden;
 }
 
-.mmm-tasklist-row {
+.mmm-tasklist-tab {
+	background: none;
+	border: none;
+	border-bottom: 2px solid transparent;
+	margin-bottom: -1px;
+	color: rgba(255, 255, 255, 0.35);
+	padding: 4px 10px 6px;
+	cursor: pointer;
+	font-size: inherit;
+	font-family: inherit;
+	font-weight: 600;
+	white-space: nowrap;
+	max-width: 160px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	transition: color 0.2s;
+}
+
+.mmm-tasklist-tab:hover {
+	color: rgba(255, 255, 255, 0.65);
+}
+
+.mmm-tasklist-tab.active {
+	color: #fff;
+	border-bottom-color: #fff;
+}
+
+/* ---- Task list ---- */
+.mmm-tasklist-items {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	max-width: 100%;
+}
+
+.mmm-tasklist-item {
 	display: flex;
 	align-items: baseline;
+	padding: 4px 0;
 	min-width: 0;
+	max-width: 100%;
 }
 
-.tasklist-name {
-	font-weight: bold;
-	color: #fff;
-	white-space: nowrap;
-	flex-shrink: 0;
-	padding-right: 8px;
-}
-
-.tasklist-dash {
-	color: #666;
+.mmm-tasklist-item::before {
+	content: "•";
+	color: #555;
 	flex-shrink: 0;
 	padding-right: 8px;
 }
@@ -34,7 +72,7 @@
 	color: #ccc;
 	cursor: pointer;
 	flex: 1;
-	min-width: 0; /* required for text-overflow to work inside a flex row */
+	min-width: 0;         /* required — without this, flex children ignore overflow */
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
@@ -44,10 +82,13 @@
 	color: #fff;
 }
 
-.mmm-tasklist-row.completing .tasklist-name,
-.mmm-tasklist-row.completing .tasklist-dash,
-.mmm-tasklist-row.completing .tasklist-task {
+/* ---- Strikethrough state ---- */
+.mmm-tasklist-item.completing::before {
+	color: #444;
+}
+
+.mmm-tasklist-item.completing .tasklist-task {
 	text-decoration: line-through;
-	color: #666;
+	color: #555;
 	transition: color 0.3s ease;
 }

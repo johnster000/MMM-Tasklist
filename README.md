@@ -20,7 +20,7 @@ _(add a screenshot of your mirror display and the admin portal here)_
 
 ```bash
 cd ~/MagicMirror/modules
-git clone <your-repo-url> MMM-TaskList
+git clone https://github.com/johnster000/MMM-Tasklist.git MMM-TaskList
 cd MMM-TaskList
 npm install
 ```

@@ -77,6 +77,17 @@ Module.register("MMM-TaskList", {
 			const tab = document.createElement("button");
 			tab.className = "mmm-tasklist-tab";
 			if (user.id === this.activeUserId) tab.classList.add("active");
+
+			const todayMs = new Date().setHours(0, 0, 0, 0);
+			let hasOverdue = false, hasDueToday = false;
+			this.tasks.filter(t => t.userId === user.id && t.dueDate).forEach(t => {
+				const diff = Math.round((new Date(t.dueDate + "T00:00:00") - todayMs) / 86400000);
+				if (diff < 0) hasOverdue = true;
+				else if (diff === 0) hasDueToday = true;
+			});
+			if (hasOverdue) tab.classList.add("tab-overdue");
+			else if (hasDueToday) tab.classList.add("tab-due-today");
+
 			tab.textContent = user.name;
 			tab.addEventListener("click", () => {
 				this.activeUserId = user.id;

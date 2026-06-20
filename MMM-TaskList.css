@@ -21,13 +21,6 @@
 	min-width: 0;
 }
 
-.mmm-tasklist-item::before {
-	content: "•";
-	color: #555;
-	flex-shrink: 0;
-	padding-right: 8px;
-}
-
 .tasklist-task {
 	color: #ccc;
 	cursor: pointer;
@@ -43,18 +36,18 @@
 	color: #fff;
 }
 
-/* ---- Urgency indicators (bullet + text tint, kept subtle) ---- */
-.mmm-tasklist-item.overdue::before  { color: #8b4040; }
+/* ---- Urgency indicators (text tint, kept subtle) ---- */
 .mmm-tasklist-item.overdue .tasklist-task  { color: #c47a7a; }
-
-.mmm-tasklist-item.due-today::before { color: #8b7020; }
 .mmm-tasklist-item.due-today .tasklist-task { color: #c4a040; }
 
-/* ---- Strikethrough state ---- */
-.mmm-tasklist-item.completing::before {
-	color: #444;
-}
+/* ---- Tab urgency colours ---- */
+.mmm-tasklist-tab.tab-overdue           { color: rgba(196, 122, 122, 0.5); }
+.mmm-tasklist-tab.tab-overdue.active    { color: #c47a7a; border-top-color: #c47a7a; }
 
+.mmm-tasklist-tab.tab-due-today         { color: rgba(196, 160, 64, 0.5); }
+.mmm-tasklist-tab.tab-due-today.active  { color: #c4a040; border-top-color: #c4a040; }
+
+/* ---- Strikethrough state ---- */
 .mmm-tasklist-item.completing .tasklist-task {
 	text-decoration: line-through;
 	color: #555;

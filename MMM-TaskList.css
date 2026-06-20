@@ -1,0 +1,23 @@
+.mmm-tasklist-wrapper {
+	text-align: left;
+}
+
+.mmm-tasklist-table {
+	border-collapse: collapse;
+}
+
+.mmm-tasklist-table td {
+	padding: 4px 12px 4px 0;
+	vertical-align: top;
+}
+
+.mmm-tasklist-table .tasklist-name {
+	font-weight: bold;
+	color: #fff;
+	white-space: nowrap;
+	padding-right: 20px;
+}
+
+.mmm-tasklist-table .tasklist-task {
+	color: #ccc;
+}

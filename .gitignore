@@ -1,0 +1,10 @@
+# Runtime data — household-specific, should not be committed
+data/tasks.json
+data/completed.log
+
+# Node
+node_modules/
+
+# OS / editor cruft
+.DS_Store
+*.log

@@ -181,6 +181,23 @@ module.exports = NodeHelper.create({
 			res.json({ ok: true });
 		});
 
+		// Get completion history (parses completed.log)
+		app.get("/api/history", (req, res) => {
+			let entries = [];
+			try {
+				if (fs.existsSync(this.logFile)) {
+					const raw = fs.readFileSync(this.logFile, "utf8");
+					entries = raw.trim().split("\n").filter(Boolean).map(line => {
+						const [timestamp, , name, ...taskParts] = line.split("\t");
+						return { timestamp, name: name || "", task: taskParts.join("\t") || "" };
+					}).reverse();
+				}
+			} catch (err) {
+				console.error("[MMM-TaskList] Failed to read history:", err);
+			}
+			res.json({ entries });
+		});
+
 		// Delete a task without logging it as completed (e.g. mistaken entry)
 		app.delete("/api/tasks/:id", (req, res) => {
 			const data = this.readData();

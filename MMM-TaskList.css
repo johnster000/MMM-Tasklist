@@ -27,7 +27,16 @@
 	color: #fff;
 }
 
-.mmm-tasklist-row.completing {
-	opacity: 0.3;
-	transition: opacity 0.3s ease;
+.tasklist-dash {
+	color: #666;
+	padding: 4px 10px 4px 0;
+	white-space: nowrap;
+}
+
+.mmm-tasklist-row.completing .tasklist-name,
+.mmm-tasklist-row.completing .tasklist-dash,
+.mmm-tasklist-row.completing .tasklist-task {
+	text-decoration: line-through;
+	color: #666;
+	transition: color 0.3s ease;
 }

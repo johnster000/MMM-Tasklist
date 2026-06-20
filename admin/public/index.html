@@ -2,167 +2,518 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>MMM-TaskList Admin</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Task Board</title>
 <style>
-	body {
-		font-family: -apple-system, Helvetica, Arial, sans-serif;
-		max-width: 720px;
-		margin: 40px auto;
-		padding: 0 20px;
-		color: #222;
-	}
-	h1 { font-size: 1.4em; }
-	h2 { font-size: 1.1em; margin-top: 2em; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
-	.user-block {
-		border: 1px solid #ddd;
-		border-radius: 6px;
-		padding: 12px 16px;
-		margin-bottom: 14px;
-	}
-	.user-header {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-	}
-	.user-header h3 { margin: 0; }
-	.task-list { list-style: none; padding: 0; margin: 10px 0 0; }
-	.task-list li {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		padding: 6px 0;
-		border-top: 1px solid #eee;
-	}
-	form.inline { display: flex; gap: 8px; margin-top: 10px; }
-	input[type=text] { flex: 1; padding: 6px 8px; }
-	button { cursor: pointer; padding: 6px 10px; }
-	button.danger { background: #fdd; border: 1px solid #c99; }
-	button.complete { background: #dfd; border: 1px solid #9c9; }
-	.muted { color: #888; font-size: 0.9em; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #f2f2f7;
+  --surface: #ffffff;
+  --surface-2: #f9f9f9;
+  --text: #1c1c1e;
+  --text-2: #6c6c70;
+  --accent: #007aff;
+  --success: #34c759;
+  --danger: #ff3b30;
+  --border: rgba(60,60,67,0.12);
+  --r: 14px;
+  --r-sm: 10px;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Header ── */
+.app-header {
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding: 14px 16px 0;
+  border-bottom: 1px solid var(--border);
+}
+.app-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 10px;
+}
+
+/* ── Segmented tab bar ── */
+.tab-bar {
+  display: flex;
+  background: rgba(118,118,128,0.12);
+  border-radius: 10px;
+  padding: 2px;
+  margin-bottom: 0;
+}
+.tab-btn {
+  flex: 1;
+  padding: 7px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.tab-btn.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 1px rgba(0,0,0,0.06);
+}
+
+/* ── Layout ── */
+.tab-content {
+  padding: 16px;
+  max-width: 680px;
+  margin: 0 auto;
+}
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ── Section labels ── */
+.section-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-2);
+  margin: 20px 0 8px;
+}
+.section-label:first-child { margin-top: 4px; }
+
+/* ── Cards ── */
+.card {
+  background: var(--surface);
+  border-radius: var(--r);
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+}
+
+/* ── Inputs ── */
+.input {
+  flex: 1;
+  height: 44px;
+  padding: 0 12px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-sm);
+  font-size: 1rem;
+  background: var(--surface);
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s;
+  min-width: 0;
+}
+.input:focus { border-color: var(--accent); }
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  padding: 0 18px;
+  border: none;
+  border-radius: var(--r-sm);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.15s, transform 0.1s;
+  flex-shrink: 0;
+}
+.btn:active { opacity: 0.7; transform: scale(0.97); }
+.btn-primary  { background: var(--accent); color: #fff; }
+.btn-success  { background: var(--success); color: #fff; height: 36px; padding: 0 12px; font-size: 0.85rem; }
+.btn-danger   { background: rgba(255,59,48,0.1); color: var(--danger); height: 36px; padding: 0 12px; font-size: 0.85rem; }
+.btn-icon     { width: 36px; height: 36px; padding: 0; font-size: 1rem; border-radius: 8px; }
+
+/* ── Add member form ── */
+.add-member-form { display: flex; gap: 8px; }
+
+/* ── User cards ── */
+.user-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.user-name { font-size: 1rem; font-weight: 700; }
+
+.task-list { list-style: none; margin-bottom: 10px; }
+.task-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+}
+.task-text { flex: 1; font-size: 0.95rem; min-width: 0; }
+.task-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+.add-task-form { display: flex; gap: 8px; border-top: 1px solid var(--border); padding-top: 10px; }
+.add-task-input {
+  flex: 1;
+  height: 40px;
+  padding: 0 10px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-sm);
+  font-size: 0.9rem;
+  background: var(--surface-2);
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s;
+  min-width: 0;
+}
+.add-task-input:focus { border-color: var(--accent); background: var(--surface); }
+.btn-add-task {
+  height: 40px;
+  padding: 0 14px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--r-sm);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.btn-add-task:active { opacity: 0.7; }
+
+.empty-state {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--text-2);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+/* ── Stats cards ── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 4px;
+}
+.stat-card {
+  background: var(--surface);
+  border-radius: var(--r);
+  padding: 14px 10px;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--accent);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.stat-label {
+  font-size: 0.72rem;
+  color: var(--text-2);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ── Per-person bars ── */
+.person-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+}
+.person-row:first-child { border-top: none; }
+.person-row-name { width: 72px; font-size: 0.875rem; font-weight: 600; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bar-track { flex: 1; height: 8px; background: rgba(118,118,128,0.12); border-radius: 4px; overflow: hidden; }
+.bar-fill  { height: 100%; background: var(--accent); border-radius: 4px; min-width: 4px; }
+.person-row-count { width: 28px; text-align: right; font-size: 0.85rem; color: var(--text-2); font-variant-numeric: tabular-nums; }
+
+/* ── History list ── */
+.history-group-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-2);
+  padding: 14px 0 6px;
+}
+.history-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+}
+.history-item:first-child { border-top: none; }
+.history-time {
+  font-size: 0.78rem;
+  color: var(--text-2);
+  white-space: nowrap;
+  padding-top: 2px;
+  min-width: 52px;
+  font-variant-numeric: tabular-nums;
+}
+.history-person { font-size: 0.9rem; font-weight: 600; }
+.history-task   { font-size: 0.875rem; color: var(--text-2); margin-top: 1px; }
 </style>
 </head>
 <body>
 
-<h1>MMM-TaskList Admin</h1>
-<p class="muted">Manage household members and their assigned tasks.</p>
+<header class="app-header">
+  <div class="app-title">Task Board</div>
+  <div class="tab-bar" role="tablist">
+    <button class="tab-btn active" data-tab="tasks"   role="tab">Tasks</button>
+    <button class="tab-btn"        data-tab="history" role="tab">History</button>
+  </div>
+</header>
 
-<h2>Add household member</h2>
-<form id="add-user-form" class="inline">
-	<input type="text" id="new-user-name" placeholder="Name" required>
-	<button type="submit">Add</button>
-</form>
+<main class="tab-content">
 
-<h2>Members &amp; Tasks</h2>
-<div id="users-container"></div>
+  <div id="tab-tasks" class="tab-panel active">
+    <p class="section-label">Add Member</p>
+    <form id="add-user-form" class="add-member-form">
+      <input class="input" type="text" id="new-user-name" placeholder="Name" required autocomplete="off">
+      <button class="btn btn-primary" type="submit">Add</button>
+    </form>
+    <p class="section-label">Members</p>
+    <div id="users-container"></div>
+  </div>
+
+  <div id="tab-history" class="tab-panel">
+    <div id="history-container"></div>
+  </div>
+
+</main>
 
 <script>
+// ── API helper ───────────────────────────────────────────────────────
 async function api(path, options) {
-	const res = await fetch(path, Object.assign({
-		headers: { "Content-Type": "application/json" }
-	}, options));
-	if (!res.ok) {
-		const body = await res.json().catch(() => ({}));
-		throw new Error(body.error || res.statusText);
-	}
-	return res.json();
-}
-
-async function loadState() {
-	const state = await api("/api/state");
-	render(state);
-}
-
-function render(state) {
-	const container = document.getElementById("users-container");
-	container.innerHTML = "";
-
-	if (state.users.length === 0) {
-		container.innerHTML = '<p class="muted">No household members yet. Add one above.</p>';
-		return;
-	}
-
-	state.users.forEach(user => {
-		const userTasks = state.tasks.filter(t => t.userId === user.id);
-
-		const block = document.createElement("div");
-		block.className = "user-block";
-
-		block.innerHTML = `
-			<div class="user-header">
-				<h3>${escapeHtml(user.name)}</h3>
-				<button class="danger" data-action="delete-user" data-id="${user.id}">Remove member</button>
-			</div>
-			<ul class="task-list">
-				${userTasks.map(t => `
-					<li>
-						<span>${escapeHtml(t.text)}</span>
-						<span>
-							<button class="complete" data-action="complete-task" data-id="${t.id}">Done</button>
-							<button class="danger" data-action="delete-task" data-id="${t.id}">Delete</button>
-						</span>
-					</li>
-				`).join("") || '<li class="muted">No tasks assigned</li>'}
-			</ul>
-			<form class="inline" data-action="add-task" data-user-id="${user.id}">
-				<input type="text" placeholder="New task" required>
-				<button type="submit">Assign</button>
-			</form>
-		`;
-
-		container.appendChild(block);
-	});
+  const res = await fetch(path, Object.assign({ headers: { "Content-Type": "application/json" } }, options));
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || res.statusText);
+  }
+  return res.json();
 }
 
 function escapeHtml(str) {
-	const div = document.createElement("div");
-	div.textContent = str;
-	return div.innerHTML;
+  const d = document.createElement("div");
+  d.textContent = str || "";
+  return d.innerHTML;
 }
 
-document.getElementById("add-user-form").addEventListener("submit", async (e) => {
-	e.preventDefault();
-	const input = document.getElementById("new-user-name");
-	const name = input.value.trim();
-	if (!name) return;
-	await api("/api/users", { method: "POST", body: JSON.stringify({ name }) });
-	input.value = "";
-	loadState();
+// ── Tab switching ────────────────────────────────────────────────────
+function showTab(name) {
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b.dataset.tab === name));
+  document.querySelectorAll(".tab-panel").forEach(p => p.classList.toggle("active", p.id === "tab-" + name));
+  if (name === "history") loadHistory();
+}
+
+document.querySelector(".tab-bar").addEventListener("click", e => {
+  const btn = e.target.closest(".tab-btn");
+  if (btn) showTab(btn.dataset.tab);
 });
 
-document.getElementById("users-container").addEventListener("click", async (e) => {
-	const btn = e.target.closest("button[data-action]");
-	if (!btn) return;
-	const { action, id } = btn.dataset;
+// ── Tasks tab ────────────────────────────────────────────────────────
+async function loadState() {
+  const state = await api("/api/state");
+  renderTasks(state);
+}
 
-	if (action === "delete-user") {
-		if (!confirm("Remove this member and all their tasks?")) return;
-		await api(`/api/users/${id}`, { method: "DELETE" });
-	}
-	if (action === "complete-task") {
-		await api(`/api/tasks/${id}/complete`, { method: "POST" });
-	}
-	if (action === "delete-task") {
-		await api(`/api/tasks/${id}`, { method: "DELETE" });
-	}
-	loadState();
+function renderTasks(state) {
+  const container = document.getElementById("users-container");
+  container.innerHTML = "";
+
+  if (state.users.length === 0) {
+    container.innerHTML = '<div class="empty-state">No household members yet.<br>Add one above to get started.</div>';
+    return;
+  }
+
+  state.users.forEach(user => {
+    const userTasks = state.tasks.filter(t => t.userId === user.id);
+
+    const tasksHtml = userTasks.length
+      ? userTasks.map(t => `
+          <li class="task-item">
+            <span class="task-text">${escapeHtml(t.text)}</span>
+            <span class="task-actions">
+              <button class="btn btn-success btn-icon" data-action="complete-task" data-id="${t.id}" title="Mark done">✓</button>
+              <button class="btn btn-danger  btn-icon" data-action="delete-task"   data-id="${t.id}" title="Delete">✕</button>
+            </span>
+          </li>`).join("")
+      : '<li class="task-item"><span class="task-text" style="color:var(--text-2)">No tasks assigned</span></li>';
+
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <div class="user-card-header">
+        <span class="user-name">${escapeHtml(user.name)}</span>
+        <button class="btn btn-danger" data-action="delete-user" data-id="${user.id}">Remove</button>
+      </div>
+      <ul class="task-list">${tasksHtml}</ul>
+      <form class="add-task-form" data-action="add-task" data-user-id="${user.id}">
+        <input class="add-task-input" type="text" placeholder="Add a task…" required autocomplete="off">
+        <button class="btn-add-task" type="submit">Add</button>
+      </form>
+    `;
+    container.appendChild(card);
+  });
+}
+
+document.getElementById("add-user-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const input = document.getElementById("new-user-name");
+  const name = input.value.trim();
+  if (!name) return;
+  await api("/api/users", { method: "POST", body: JSON.stringify({ name }) });
+  input.value = "";
+  loadState();
 });
 
-document.getElementById("users-container").addEventListener("submit", async (e) => {
-	const form = e.target.closest("form[data-action=add-task]");
-	if (!form) return;
-	e.preventDefault();
-	const input = form.querySelector("input[type=text]");
-	const text = input.value.trim();
-	if (!text) return;
-	await api("/api/tasks", {
-		method: "POST",
-		body: JSON.stringify({ userId: form.dataset.userId, text })
-	});
-	loadState();
+document.getElementById("users-container").addEventListener("click", async e => {
+  const btn = e.target.closest("[data-action]");
+  if (!btn) return;
+  const { action, id } = btn.dataset;
+  if (action === "delete-user") {
+    if (!confirm("Remove this member and all their tasks?")) return;
+    await api(`/api/users/${id}`, { method: "DELETE" });
+  } else if (action === "complete-task") {
+    await api(`/api/tasks/${id}/complete`, { method: "POST" });
+  } else if (action === "delete-task") {
+    await api(`/api/tasks/${id}`, { method: "DELETE" });
+  }
+  loadState();
 });
 
+document.getElementById("users-container").addEventListener("submit", async e => {
+  const form = e.target.closest("form[data-action=add-task]");
+  if (!form) return;
+  e.preventDefault();
+  const input = form.querySelector("input");
+  const text = input.value.trim();
+  if (!text) return;
+  await api("/api/tasks", { method: "POST", body: JSON.stringify({ userId: form.dataset.userId, text }) });
+  input.value = "";
+  loadState();
+});
+
+// ── History tab ──────────────────────────────────────────────────────
+async function loadHistory() {
+  const { entries } = await api("/api/history");
+  renderHistory(entries);
+}
+
+function formatTime(isoString) {
+  return new Date(isoString).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+}
+
+function dateGroupLabel(isoString) {
+  const d = new Date(isoString);
+  const now = new Date();
+  const today     = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const yesterday = today - 86400000;
+  const entry     = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  if (entry === today)     return "Today";
+  if (entry === yesterday) return "Yesterday";
+  const opts = { month: "long", day: "numeric" };
+  if (d.getFullYear() !== now.getFullYear()) opts.year = "numeric";
+  return d.toLocaleDateString([], opts);
+}
+
+function computeStats(entries) {
+  const now        = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const weekStart  = todayStart - 6 * 86400000;
+  let today = 0, week = 0;
+  const byPerson = {};
+  entries.forEach(e => {
+    const t = new Date(e.timestamp).getTime();
+    if (t >= todayStart) today++;
+    if (t >= weekStart)  week++;
+    byPerson[e.name] = (byPerson[e.name] || 0) + 1;
+  });
+  return { total: entries.length, today, week, byPerson };
+}
+
+function renderHistory(entries) {
+  const container = document.getElementById("history-container");
+
+  if (entries.length === 0) {
+    container.innerHTML = '<div class="empty-state">No tasks completed yet.<br>Mark some tasks done to start tracking history.</div>';
+    return;
+  }
+
+  const stats = computeStats(entries);
+
+  // Stats row
+  const statsHtml = `
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-value">${stats.total}</div><div class="stat-label">All Time</div></div>
+      <div class="stat-card"><div class="stat-value">${stats.week}</div><div class="stat-label">This Week</div></div>
+      <div class="stat-card"><div class="stat-value">${stats.today}</div><div class="stat-label">Today</div></div>
+    </div>
+  `;
+
+  // Per-person bars
+  const people   = Object.entries(stats.byPerson).sort((a, b) => b[1] - a[1]);
+  const maxCount = people[0][1];
+  const barsHtml = people.map(([name, count]) => `
+    <div class="person-row">
+      <span class="person-row-name">${escapeHtml(name)}</span>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.round(count / maxCount * 100)}%"></div></div>
+      <span class="person-row-count">${count}</span>
+    </div>
+  `).join("");
+
+  // Grouped recent activity
+  const groups = {};
+  entries.forEach(e => {
+    const label = dateGroupLabel(e.timestamp);
+    if (!groups[label]) groups[label] = [];
+    groups[label].push(e);
+  });
+
+  const activityHtml = Object.entries(groups).map(([label, items]) => `
+    <div class="history-group-label">${label}</div>
+    <div class="card" style="padding: 6px 16px;">
+      ${items.map(e => `
+        <div class="history-item">
+          <span class="history-time">${formatTime(e.timestamp)}</span>
+          <div>
+            <div class="history-person">${escapeHtml(e.name)}</div>
+            <div class="history-task">${escapeHtml(e.task)}</div>
+          </div>
+        </div>
+      `).join("")}
+    </div>
+  `).join("");
+
+  container.innerHTML =
+    statsHtml +
+    '<p class="section-label">By Person</p><div class="card" style="padding: 8px 16px;">' + barsHtml + '</div>' +
+    '<p class="section-label">Recent Activity</p>' +
+    activityHtml;
+}
+
+// ── Init ─────────────────────────────────────────────────────────────
 loadState();
 </script>
-
 </body>
 </html>

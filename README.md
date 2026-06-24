@@ -4,6 +4,8 @@ A [MagicMirror²](https://magicmirror.builders/) module that displays household 
 
 A separate admin web portal (its own port, independent of the mirror's own server) lets you manage members and tasks from any phone or laptop on your network, and includes a history view with per-person completion stats.
 
+![MMM-TaskList screenshot](screenshot.png)
+
 ## Features
 
 - Per-member tab bar — only members with open tasks appear

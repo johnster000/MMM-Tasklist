@@ -10,6 +10,6 @@
     "url": "https://github.com/johnster000/MMM-Tasklist.git"
   },
   "dependencies": {
-    "express": "^4.18.2"
+    "express": "^5.2.1"
   }
 }

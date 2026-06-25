@@ -1,0 +1,15 @@
+{
+  "name": "MMM-TaskList",
+  "version": "1.0.0",
+  "description": "MagicMirror² module — household task list with per-member tabs, touch-to-complete, and an admin web portal",
+  "main": "MMM-TaskList.js",
+  "keywords": ["MagicMirror", "module", "tasks", "chores", "household", "todo", "admin"],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/johnster000/MMM-Tasklist.git"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

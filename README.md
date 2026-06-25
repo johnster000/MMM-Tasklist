@@ -24,6 +24,14 @@ cd MMM-TaskList
 npm install
 ```
 
+## Update
+
+```bash
+cd ~/MagicMirror/modules/MMM-TaskList
+git pull
+npm install
+```
+
 ## Configuration
 
 Add to `~/MagicMirror/config/config.js`:
@@ -36,7 +44,7 @@ Add to `~/MagicMirror/config/config.js`:
     adminPort: 8081,
     maxWidth: "350px"
   }
-}
+},
 ```
 
 | Option            | Type   | Default               | Description                                                         |
